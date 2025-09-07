@@ -1,0 +1,24 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+http = { workspace = true }
+sched-core = { path = "../core" }
+solver-milp = { path = "../solver-milp" }
+jobs = { path = "../jobs" }
+types = { path = "../types" }
+solver-heur = { path = "../solver-heur" }
+utoipa = { version = "4", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "7", features = ["axum"] }
+async-trait = "0.1.89"

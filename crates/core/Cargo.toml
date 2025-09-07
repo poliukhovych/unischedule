@@ -1,0 +1,12 @@
+[package]
+name = "sched-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+types = { path = "../types" }
+async-trait = { workspace = true }

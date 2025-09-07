@@ -1,0 +1,8 @@
+[alias]
+ci = "fmt --all && clippy --all-targets --all-features -- -D warnings"
+run-api = "run -p api"
+
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-L", "/opt/homebrew/opt/cbc/lib"
+]
