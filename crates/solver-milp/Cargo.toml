@@ -1,0 +1,17 @@
+[package]
+name = "solver-milp"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+with-milp = ["good_lp/coin_cbc"]
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+types = { path = "../types" }
+sched-core = { path = "../core" }
+async-trait = { workspace = true }
+good_lp = { workspace = true, optional = true }

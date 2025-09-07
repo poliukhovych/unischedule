@@ -1,0 +1,17 @@
+{
+  "instance": {
+    "teachers": [
+      {
+        "id": "t1",
+        "available": ["mon.1","tue.1","tue.2"],
+        "prefs": { "avoid_slots": ["tue.1"] }
+      }
+    ],
+    "groups": [{"id":"g1","size": 30}],
+    "rooms": [{"id":"r101","capacity": 40}],
+    "courses": [{"id":"c_math","groupId":"g1","teacherId":"t1","countPerWeek": 2, "duration": 1}],
+    "timeslots": ["mon.1","tue.1"],
+    "policy": { "soft_weights": { "unpreferred_time": 10, "windows": 5 } }
+  },
+  "params": {"solver":"Milp", "timeLimitSec": 5, "seed": 42, "repairLocalSearch": false}
+}
