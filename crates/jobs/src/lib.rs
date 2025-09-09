@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use parking_lot::RwLock;
-use uuid::Uuid;
+use sched_core::{SolveEnvelope, SolveResult, Solver};
+use std::collections::HashMap;
 use tracing::error;
 use utoipa::ToSchema;
-use sched_core::{Solver, SolveEnvelope, SolveResult};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct JobId(pub String);
@@ -26,7 +26,10 @@ pub struct InMemJobs<S: Solver> {
 
 impl<S: Solver> InMemJobs<S> {
     pub fn new(solver: S) -> Self {
-        Self { inner: Default::default(), solver: std::sync::Arc::new(solver) }
+        Self {
+            inner: Default::default(),
+            solver: std::sync::Arc::new(solver),
+        }
     }
 
     pub fn enqueue(&self, env: SolveEnvelope) -> JobId {
@@ -44,11 +47,17 @@ impl<S: Solver> InMemJobs<S> {
             }
             match solver.solve(env).await {
                 Ok(res) => {
-                    map.write().insert(id_for_task, JobStatus::Solved { result: res });
+                    map.write()
+                        .insert(id_for_task, JobStatus::Solved { result: res });
                 }
                 Err(e) => {
                     error!(?e, "job failed");
-                    map.write().insert(id_for_task, JobStatus::Failed { message: e.to_string() });
+                    map.write().insert(
+                        id_for_task,
+                        JobStatus::Failed {
+                            message: e.to_string(),
+                        },
+                    );
                 }
             }
         });
@@ -56,5 +65,7 @@ impl<S: Solver> InMemJobs<S> {
         JobId(id)
     }
 
-    pub fn get(&self, id: &str) -> Option<JobStatus> { self.inner.read().get(id).cloned() }
+    pub fn get(&self, id: &str) -> Option<JobStatus> {
+        self.inner.read().get(id).cloned()
+    }
 }

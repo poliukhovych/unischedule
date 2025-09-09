@@ -1,7 +1,18 @@
-mod state; mod error; mod telemetry;
-pub mod routes { pub mod health; pub mod solve; pub mod jobs; pub mod validate; pub mod explain; }
+mod error;
+mod state;
+mod telemetry;
+pub mod routes {
+    pub mod explain;
+    pub mod health;
+    pub mod jobs;
+    pub mod solve;
+    pub mod validate;
+}
 
-use axum::{routing::{get, post}, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use utoipa::OpenApi;

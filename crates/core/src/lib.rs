@@ -4,7 +4,8 @@ use async_trait::async_trait;
 use thiserror::Error;
 
 pub use types::{
-    Assignment, Course, Group, Instance, Room, SolveEnvelope, SolveParams, SolveResult, Teacher, TimeslotId,
+    Assignment, Course, Group, Instance, Room, SolveEnvelope, SolveParams, SolveResult, Teacher,
+    TimeslotId,
 };
 
 #[derive(Debug, Error)]
@@ -35,7 +36,11 @@ pub fn validate(inst: &Instance) -> Result<(), ValidationError> {
             }
         }
     }
-    chk_unique("teacher", inst.teachers.iter().map(|x| &x.id.0), &mut errors);
+    chk_unique(
+        "teacher",
+        inst.teachers.iter().map(|x| &x.id.0),
+        &mut errors,
+    );
     chk_unique("group", inst.groups.iter().map(|x| &x.id.0), &mut errors);
     chk_unique("room", inst.rooms.iter().map(|x| &x.id.0), &mut errors);
     chk_unique("course", inst.courses.iter().map(|x| &x.id.0), &mut errors);
@@ -49,40 +54,69 @@ pub fn validate(inst: &Instance) -> Result<(), ValidationError> {
     for t in &inst.teachers {
         for slot in &t.available {
             if !times.contains(&slot.0) {
-                errors.push(format!("teacher {} has unavailable slot {}", t.id.0, slot.0));
+                errors.push(format!(
+                    "teacher {} has unavailable slot {}",
+                    t.id.0, slot.0
+                ));
             }
         }
     }
 
     for c in &inst.courses {
         if !teachers.contains(&c.teacherId.0) {
-            errors.push(format!("course {} references missing teacher {}", c.id.0, c.teacherId.0));
+            errors.push(format!(
+                "course {} references missing teacher {}",
+                c.id.0, c.teacherId.0
+            ));
         }
         if !groups.contains(&c.groupId.0) {
-            errors.push(format!("course {} references missing group {}", c.id.0, c.groupId.0));
+            errors.push(format!(
+                "course {} references missing group {}",
+                c.id.0, c.groupId.0
+            ));
         }
         if c.countPerWeek == 0 {
             errors.push(format!("course {} has countPerWeek=0", c.id.0));
         }
         if !(c.duration == 1 || c.duration == 2) {
-            errors.push(format!("course {} has invalid duration {}", c.id.0, c.duration));
+            errors.push(format!(
+                "course {} has invalid duration {}",
+                c.id.0, c.duration
+            ));
         }
         let mut any_room_ok = false;
         'rooms: for r in rooms {
-            if r.capacity < inst.groups.iter().find(|g| g.id == c.groupId).map(|g| g.size).unwrap_or(0) {
+            if r.capacity
+                < inst
+                    .groups
+                    .iter()
+                    .find(|g| g.id == c.groupId)
+                    .map(|g| g.size)
+                    .unwrap_or(0)
+            {
                 continue;
             }
             for need in &c.needs {
-                if !r.equip.contains(need) { continue 'rooms; }
+                if !r.equip.contains(need) {
+                    continue 'rooms;
+                }
             }
-            any_room_ok = true; break;
+            any_room_ok = true;
+            break;
         }
         if !any_room_ok {
-            errors.push(format!("course {} is unschedulable: no suitable room", c.id.0));
+            errors.push(format!(
+                "course {} is unschedulable: no suitable room",
+                c.id.0
+            ));
         }
     }
 
-    if errors.is_empty() { Ok(()) } else { Err(ValidationError::Msg(errors.join("; "))) }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(ValidationError::Msg(errors.join("; ")))
+    }
 }
 
 #[async_trait]

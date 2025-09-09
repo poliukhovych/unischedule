@@ -5,23 +5,29 @@ mod milp_core;
 use milp_core::*;
 
 use async_trait::async_trait;
-use sched_core::{Solver, SolveEnvelope, SolveResult};
+use sched_core::{SolveEnvelope, SolveResult, Solver};
 use tracing::info;
 
+use good_lp::Solution;
 use std::collections::{HashMap, HashSet};
 use types::{
-    Assignment, Course, Group, Instance, Room, Teacher, TimeslotId,
-    CourseId, RoomId, TeacherId,
+    Assignment, Course, CourseId, Group, Instance, Room, RoomId, Teacher, TeacherId, TimeslotId,
 };
-use good_lp::Solution;
 
 pub struct MilpSolver;
-impl MilpSolver { pub fn new() -> Self { Self } }
+impl MilpSolver {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 #[async_trait]
 impl Solver for MilpSolver {
     async fn solve(&self, env: SolveEnvelope) -> anyhow::Result<SolveResult> {
-        info!("received instance with {} courses", env.instance.courses.len());
+        info!(
+            "received instance with {} courses",
+            env.instance.courses.len()
+        );
         #[cfg(feature = "with-milp")]
         {
             if let Ok(r) = solve_with_milp(&env).await {
@@ -35,8 +41,13 @@ impl Solver for MilpSolver {
 fn solve_greedy(inst: &Instance) -> SolveResult {
     let times: Vec<String> = inst.timeslots.iter().map(|t| t.0.clone()).collect();
 
-    let group_size: HashMap<&str, u32> = inst.groups.iter().map(|g| (g.id.0.as_str(), g.size)).collect();
-    let teacher_by_id: HashMap<&str, &Teacher> = inst.teachers.iter().map(|t| (t.id.0.as_str(), t)).collect();
+    let group_size: HashMap<&str, u32> = inst
+        .groups
+        .iter()
+        .map(|g| (g.id.0.as_str(), g.size))
+        .collect();
+    let teacher_by_id: HashMap<&str, &Teacher> =
+        inst.teachers.iter().map(|t| (t.id.0.as_str(), t)).collect();
 
     let mut occ_room: HashMap<(&str, usize), bool> = HashMap::new();
     let mut occ_teacher: HashMap<(&str, usize), bool> = HashMap::new();
@@ -50,16 +61,25 @@ fn solve_greedy(inst: &Instance) -> SolveResult {
             return !dur2 || (t + 1 < times.len());
         }
         let has_t = teacher.available.iter().any(|x| x.0 == times[t]);
-        if !dur2 { return has_t; }
-        let has_t1 = t + 1 < times.len() && teacher.available.iter().any(|x| x.0 == times[t+1]);
+        if !dur2 {
+            return has_t;
+        }
+        let has_t1 = t + 1 < times.len() && teacher.available.iter().any(|x| x.0 == times[t + 1]);
         has_t && has_t1
     };
 
     let room_ok_for_course = |room: &Room, course: &Course| -> bool {
-        let gsz = group_size.get(course.groupId.0.as_str()).copied().unwrap_or(0);
-        if room.capacity < gsz { return false; }
+        let gsz = group_size
+            .get(course.groupId.0.as_str())
+            .copied()
+            .unwrap_or(0);
+        if room.capacity < gsz {
+            return false;
+        }
         for need in &course.needs {
-            if !room.equip.contains(need) { return false; }
+            if !room.equip.contains(need) {
+                return false;
+            }
         }
         true
     };
@@ -69,32 +89,55 @@ fn solve_greedy(inst: &Instance) -> SolveResult {
         let mut placed = 0u32;
 
         for t in 0..times.len() {
-            if dur2 && t + 1 >= times.len() { break; }
+            if dur2 && t + 1 >= times.len() {
+                break;
+            }
             let teacher = match teacher_by_id.get(c.teacherId.0.as_str()) {
                 Some(tch) => *tch,
-                None => { infeasible = true; break 'course_loop; }
+                None => {
+                    infeasible = true;
+                    break 'course_loop;
+                }
             };
-            if !is_teacher_available(teacher, t, dur2) { continue; }
+            if !is_teacher_available(teacher, t, dur2) {
+                continue;
+            }
 
             for r in &inst.rooms {
-                if !room_ok_for_course(r, c) { continue; }
+                if !room_ok_for_course(r, c) {
+                    continue;
+                }
 
                 let clash = || -> bool {
                     // room
-                    if *occ_room.get(&(r.id.0.as_str(), t)).unwrap_or(&false) { return true; }
-                    if dur2 && *occ_room.get(&(r.id.0.as_str(), t+1)).unwrap_or(&false) { return true; }
+                    if *occ_room.get(&(r.id.0.as_str(), t)).unwrap_or(&false) {
+                        return true;
+                    }
+                    if dur2 && *occ_room.get(&(r.id.0.as_str(), t + 1)).unwrap_or(&false) {
+                        return true;
+                    }
                     // teacher
                     let tid = teacher.id.0.as_str();
-                    if *occ_teacher.get(&(tid, t)).unwrap_or(&false) { return true; }
-                    if dur2 && *occ_teacher.get(&(tid, t+1)).unwrap_or(&false) { return true; }
+                    if *occ_teacher.get(&(tid, t)).unwrap_or(&false) {
+                        return true;
+                    }
+                    if dur2 && *occ_teacher.get(&(tid, t + 1)).unwrap_or(&false) {
+                        return true;
+                    }
                     // group
                     let gid = c.groupId.0.as_str();
-                    if *occ_group.get(&(gid, t)).unwrap_or(&false) { return true; }
-                    if dur2 && *occ_group.get(&(gid, t+1)).unwrap_or(&false) { return true; }
+                    if *occ_group.get(&(gid, t)).unwrap_or(&false) {
+                        return true;
+                    }
+                    if dur2 && *occ_group.get(&(gid, t + 1)).unwrap_or(&false) {
+                        return true;
+                    }
                     false
                 }();
 
-                if clash { continue; }
+                if clash {
+                    continue;
+                }
 
                 assignments.push(Assignment {
                     courseId: c.id.clone(),
@@ -107,13 +150,17 @@ fn solve_greedy(inst: &Instance) -> SolveResult {
                 *occ_teacher.entry((teacher.id.0.as_str(), t)).or_default() = true;
                 *occ_group.entry((c.groupId.0.as_str(), t)).or_default() = true;
                 if dur2 {
-                    *occ_room.entry((r.id.0.as_str(), t+1)).or_default() = true;
-                    *occ_teacher.entry((teacher.id.0.as_str(), t+1)).or_default() = true;
-                    *occ_group.entry((c.groupId.0.as_str(), t+1)).or_default() = true;
+                    *occ_room.entry((r.id.0.as_str(), t + 1)).or_default() = true;
+                    *occ_teacher
+                        .entry((teacher.id.0.as_str(), t + 1))
+                        .or_default() = true;
+                    *occ_group.entry((c.groupId.0.as_str(), t + 1)).or_default() = true;
                 }
 
                 placed += 1;
-                if placed == c.countPerWeek { break; }
+                if placed == c.countPerWeek {
+                    break;
+                }
             }
             if placed == c.countPerWeek {}
         }
@@ -124,7 +171,11 @@ fn solve_greedy(inst: &Instance) -> SolveResult {
     }
 
     SolveResult {
-        status: if infeasible { "infeasible".into() } else { "solved".into() },
+        status: if infeasible {
+            "infeasible".into()
+        } else {
+            "solved".into()
+        },
         objective: 0.0,
         assignments,
         violations: vec![],
@@ -156,7 +207,13 @@ async fn solve_with_milp(env: &types::SolveEnvelope) -> anyhow::Result<SolveResu
     }
     let (ot, og) = declare_occupancy_vars(&prep, &mut pvars);
     let (adj_t, adj_g) = declare_adjacency_vars(&prep, &mut pvars, &ot, &og);
-    let v = milp_core::Vars { starts, ot, og, adj_t, adj_g };
+    let v = milp_core::Vars {
+        starts,
+        ot,
+        og,
+        adj_t,
+        adj_g,
+    };
 
     let objective = build_objective(&prep, &v);
 

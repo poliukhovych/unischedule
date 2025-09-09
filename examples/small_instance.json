@@ -2,16 +2,109 @@
   "instance": {
     "teachers": [
       {
-        "id": "t1",
-        "available": ["mon.1","tue.1","tue.2"],
-        "prefs": { "avoid_slots": ["tue.1"] }
+        "id": "t_kovalenko",
+        "name": "Коваленко О.",
+        "available": [
+          "mon.1",
+          "mon.2",
+          "tue.1",
+          "tue.2",
+          "wed.1"
+        ],
+        "prefs": {
+          "avoid_slots": [
+            "fri.4"
+          ],
+          "preferred_days": [
+            "mon",
+            "tue"
+          ]
+        }
+      },
+      {
+        "id": "t_petrenko",
+        "name": "Петренко І.",
+        "available": [
+          "mon.1",
+          "mon.2",
+          "tue.1",
+          "tue.2",
+          "tue.3",
+          "thu.1",
+          "thu.2"
+        ],
+        "prefs": {
+          "avoid_slots": [],
+          "preferred_days": [
+            "thu"
+          ]
+        }
       }
     ],
-    "groups": [{"id":"g1","size": 30}],
-    "rooms": [{"id":"r101","capacity": 40}],
-    "courses": [{"id":"c_math","groupId":"g1","teacherId":"t1","countPerWeek": 2, "duration": 1}],
-    "timeslots": ["mon.1","tue.1"],
-    "policy": { "soft_weights": { "unpreferred_time": 10, "windows": 5 } }
+    "groups": [
+      {
+        "id": "g1_math_1",
+        "name": "Математика-1",
+        "size": 28
+      },
+      {
+        "id": "g2_cs_1",
+        "name": "Комп. науки-1",
+        "size": 32
+      }
+    ],
+    "rooms": [
+      {
+        "id": "r101",
+        "capacity": 40
+      },
+      {
+        "id": "r202",
+        "capacity": 50
+      }
+    ],
+    "courses": [
+      {
+        "id": "c_alg",
+        "name": "Алгебра",
+        "groupId": "g1_math_1",
+        "teacherId": "t_kovalenko",
+        "countPerWeek": 2,
+        "duration": 1
+      },
+      {
+        "id": "c_prog",
+        "name": "Програмування",
+        "groupId": "g2_cs_1",
+        "teacherId": "t_petrenko",
+        "countPerWeek": 3,
+        "duration": 2
+      }
+    ],
+    "timeslots": [
+      "mon.1",
+      "mon.2",
+      "mon.3",
+      "tue.1",
+      "tue.2",
+      "tue.3",
+      "wed.1",
+      "wed.2",
+      "wed.3",
+      "thu.1",
+      "thu.2",
+      "fri.4"
+    ],
+    "policy": {
+      "soft_weights": {
+        "windows": 5
+      }
+    }
   },
-  "params": {"solver":"Milp", "timeLimitSec": 5, "seed": 42, "repairLocalSearch": false}
+  "params": {
+    "solver": "Milp",
+    "timeLimitSec": 10,
+    "seed": 42,
+    "repairLocalSearch": true
+  }
 }

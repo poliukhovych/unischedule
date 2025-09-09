@@ -20,10 +20,26 @@ pub struct ValidationReport {
 )]
 pub async fn validate_handler(Json(inst): Json<Instance>) -> (StatusCode, Json<ValidationReport>) {
     match validate(&inst) {
-        Ok(()) => (StatusCode::OK, Json(ValidationReport { ok: true, errors: vec![] })),
+        Ok(()) => (
+            StatusCode::OK,
+            Json(ValidationReport {
+                ok: true,
+                errors: vec![],
+            }),
+        ),
         Err(ValidationError::Msg(msg)) => {
-            let errs = msg.split(';').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
-            (StatusCode::OK, Json(ValidationReport { ok: false, errors: errs }))
+            let errs = msg
+                .split(';')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            (
+                StatusCode::OK,
+                Json(ValidationReport {
+                    ok: false,
+                    errors: errs,
+                }),
+            )
         }
     }
 }
