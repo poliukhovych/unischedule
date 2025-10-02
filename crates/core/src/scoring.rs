@@ -26,7 +26,10 @@ pub fn compute_soft_scores(inst: &Instance, assignments: &[Assignment]) -> Score
     for &ts in &times {
         let mut parts = ts.split('.');
         let d = parts.next().unwrap_or("");
-        let idx = parts.next().and_then(|x| x.parse::<u32>().ok()).unwrap_or(0);
+        let idx = parts
+            .next()
+            .and_then(|x| x.parse::<u32>().ok())
+            .unwrap_or(0);
         day_of.push(d);
         day_index.push(idx);
     }
@@ -98,8 +101,7 @@ pub fn compute_soft_scores(inst: &Instance, assignments: &[Assignment]) -> Score
     let mut agent_windows = |is_teacher: bool, id: &str| -> i64 {
         let mut total = 0i64;
         for (_day, slots) in &day_slots {
-            if slots.len() < 2 {
-            }
+            if slots.len() < 2 {}
             let mut sum_o = 0i64;
             let mut sum_adj = 0i64;
             for &k in slots {
@@ -108,13 +110,26 @@ pub fn compute_soft_scores(inst: &Instance, assignments: &[Assignment]) -> Score
                 } else {
                     *occ_group.get(&(id, k)).unwrap_or(&false)
                 };
-                if occ { sum_o += 1; }
+                if occ {
+                    sum_o += 1;
+                }
             }
             for w in slots.windows(2) {
-                let k = w[0]; let k1 = w[1];
-                let occ_k = if is_teacher { *occ_teacher.get(&(id, k)).unwrap_or(&false) } else { *occ_group.get(&(id, k)).unwrap_or(&false) };
-                let occ_k1 = if is_teacher { *occ_teacher.get(&(id, k1)).unwrap_or(&false) } else { *occ_group.get(&(id, k1)).unwrap_or(&false) };
-                if occ_k && occ_k1 { sum_adj += 1; }
+                let k = w[0];
+                let k1 = w[1];
+                let occ_k = if is_teacher {
+                    *occ_teacher.get(&(id, k)).unwrap_or(&false)
+                } else {
+                    *occ_group.get(&(id, k)).unwrap_or(&false)
+                };
+                let occ_k1 = if is_teacher {
+                    *occ_teacher.get(&(id, k1)).unwrap_or(&false)
+                } else {
+                    *occ_group.get(&(id, k1)).unwrap_or(&false)
+                };
+                if occ_k && occ_k1 {
+                    sum_adj += 1;
+                }
             }
             total += sum_o - sum_adj;
         }
@@ -123,11 +138,15 @@ pub fn compute_soft_scores(inst: &Instance, assignments: &[Assignment]) -> Score
 
     for &tid in &teacher_ids {
         let val = agent_windows(true, tid);
-        if val != 0 { windows_teachers.insert(tid.to_string(), val); }
+        if val != 0 {
+            windows_teachers.insert(tid.to_string(), val);
+        }
     }
     for &gid in &group_ids {
         let val = agent_windows(false, gid);
-        if val != 0 { windows_groups.insert(gid.to_string(), val); }
+        if val != 0 {
+            windows_groups.insert(gid.to_string(), val);
+        }
     }
 
     let windows_total: i64 =
